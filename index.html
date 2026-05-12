@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShieldMe — Take Back Control of Your Internet</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --card: #13131a;
+    --border: #1e1e2e;
+    --accent: #4ade80;
+    --text: #f0f0f0;
+    --muted: #6b7280;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+
+  /* GLOW */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(74,222,128,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px; position: sticky; top: 0;
+    background: rgba(10,10,15,0.9); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border); z-index: 100;
+  }
+  .nav-logo { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+  .nav-logo span { color: var(--accent); }
+  .nav-btn {
+    background: var(--accent); color: #000;
+    border: none; padding: 10px 24px; border-radius: 100px;
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+    cursor: pointer; text-decoration: none; display: inline-block;
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center; padding: 80px 24px 60px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .hero-badge {
+    background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3);
+    color: var(--accent); padding: 6px 18px; border-radius: 100px;
+    font-size: 13px; font-weight: 500; margin-bottom: 28px;
+    display: inline-block;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 8vw, 64px);
+    font-weight: 800; line-height: 1.05;
+    margin-bottom: 20px; max-width: 700px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    color: var(--muted); font-size: 18px; line-height: 1.7;
+    max-width: 480px; margin-bottom: 40px;
+  }
+  .hero-btns { display: flex; flex-direction: column; gap: 12px; align-items: center; width: 100%; }
+  .btn-primary {
+    background: var(--accent); color: #000; border: none;
+    padding: 18px 48px; border-radius: 100px;
+    font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s; width: 100%; max-width: 320px;
+    text-decoration: none; display: block; text-align: center;
+  }
+  .btn-primary:hover { transform: scale(1.03); box-shadow: 0 0 40px rgba(74,222,128,0.35); }
+  .btn-ghost {
+    color: var(--muted); font-size: 15px; text-decoration: underline;
+    cursor: pointer; background: none; border: none;
+  }
+
+  /* SHIELD VISUAL */
+  .shield-visual {
+    font-size: 120px; margin: 40px 0;
+    animation: float 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 40px rgba(74,222,128,0.3));
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  /* HOW IT WORKS */
+  section { padding: 60px 24px; max-width: 600px; margin: 0 auto; }
+  .section-label {
+    font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--accent); font-weight: 700; margin-bottom: 12px;
+    text-align: center;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif; font-size: clamp(28px, 5vw, 40px);
+    font-weight: 800; text-align: center; margin-bottom: 40px; line-height: 1.2;
+  }
+
+  .steps { display: flex; flex-direction: column; gap: 20px; }
+  .step {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px;
+    display: flex; align-items: flex-start; gap: 16px;
+    transition: border-color 0.2s;
+  }
+  .step:hover { border-color: rgba(74,222,128,0.3); }
+  .step-num {
+    background: var(--accent); color: #000;
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800;
+    flex-shrink: 0;
+  }
+  .step-body h3 { font-family: 'Syne', sans-serif; font-size: 18px; margin-bottom: 6px; }
+  .step-body p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+  /* FEATURES */
+  .features { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .feature {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 20px;
+  }
+  .feature-icon { font-size: 28px; margin-bottom: 10px; }
+  .feature h4 { font-family: 'Syne', sans-serif; font-size: 15px; margin-bottom: 6px; }
+  .feature p { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+  /* PRICING */
+  .price-card {
+    background: var(--card); border: 2px solid var(--accent);
+    border-radius: 20px; padding: 32px; text-align: center;
+    box-shadow: 0 0 60px rgba(74,222,128,0.1);
+  }
+  .price { font-family: 'Syne', sans-serif; font-size: 52px; font-weight: 800; }
+  .price span { font-size: 20px; color: var(--muted); }
+  .price-features { list-style: none; margin: 24px 0; text-align: left; }
+  .price-features li {
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 15px; display: flex; align-items: center; gap: 10px;
+  }
+  .price-features li:last-child { border-bottom: none; }
+  .check { color: var(--accent); font-size: 16px; }
+
+  /* TESTIMONIALS */
+  .testimonial {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; margin-bottom: 14px;
+  }
+  .testimonial p { font-size: 15px; line-height: 1.7; margin-bottom: 14px; color: #d0d0d0; }
+  .testimonial-author { font-size: 13px; color: var(--muted); }
+  .stars { color: #fbbf24; font-size: 14px; margin-bottom: 10px; }
+
+  /* CTA */
+  .cta-section {
+    text-align: center; padding: 60px 24px 80px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px; text-align: center;
+    color: var(--muted); font-size: 13px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hero > * { animation: fadeUp 0.5s ease forwards; }
+  .hero > *:nth-child(2) { animation-delay: 0.1s; }
+  .hero > *:nth-child(3) { animation-delay: 0.2s; }
+  .hero > *:nth-child(4) { animation-delay: 0.3s; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Shield<span>Me</span></div>
+  <a href="/app" class="nav-btn">Get Protected Free</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">🛡️ Free to start — works on every browser</div>
+  <h1>Block what hurts you.<br><span>Keep what helps you.</span></h1>
+  <p>ShieldMe blocks adult content, gambling, and anything you choose — across every browser and app on your device. One tap to set up.</p>
+  <div class="hero-btns">
+    <a href="/app" class="btn-primary">Start Free — Takes 2 Minutes</a>
+    <button class="btn-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See how it works ↓</button>
+  </div>
+  <div class="shield-visual">🛡️</div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-label">How it works</div>
+  <div class="section-title">Three taps.<br>Fully protected.</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Create your account</h3>
+        <p>Takes 60 seconds. Just your name, email, and a password. No credit card. No complicated setup.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Choose what to block</h3>
+        <p>Tap the categories you want gone — porn, gambling, violence, or type your own custom words. Your rules, your choice.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Change one setting on your phone</h3>
+        <p>We show you exactly what to tap. Takes 2 minutes. After that, every browser and every app on your network is protected — automatically.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section>
+  <div class="section-label">Features</div>
+  <div class="section-title">Built to actually work.</div>
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">🔞</div>
+      <h4>Adult Content</h4>
+      <p>Millions of adult sites blocked automatically before they even load.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔒</div>
+      <h4>Guardian PIN</h4>
+      <p>Give the PIN to someone you trust. Stops you bypassing your own rules.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📱</div>
+      <h4>Every Browser</h4>
+      <p>Chrome, Firefox, DuckDuckGo, Phoenix — all blocked. Not just one app.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">✏️</div>
+      <h4>Custom Words</h4>
+      <p>Block any site or keyword you want. Your shield, your rules.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🎰</div>
+      <h4>Gambling Blocked</h4>
+      <p>Betting sites, casinos, and sports gambling — all off limits.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">👨‍👩‍👧</div>
+      <h4>Family Ready</h4>
+      <p>Protect your kids on the same WiFi without extra apps or routers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section>
+  <div class="section-label">Pricing</div>
+  <div class="section-title">Simple. Fair. Affordable.</div>
+  <div class="price-card">
+    <div style="font-size:13px; color:var(--muted); margin-bottom:8px;">FULL PROTECTION</div>
+    <div class="price">$3<span>/month</span></div>
+    <div style="font-size:13px; color:var(--accent); margin-top:4px;">First 30 days completely free</div>
+    <ul class="price-features">
+      <li><span class="check">✓</span> All content categories blocked</li>
+      <li><span class="check">✓</span> Custom word blocking</li>
+      <li><span class="check">✓</span> Guardian PIN protection</li>
+      <li><span class="check">✓</span> Works on every browser & app</li>
+      <li><span class="check">✓</span> Family sharing (up to 5 people)</li>
+      <li><span class="check">✓</span> Cancel any time</li>
+    </ul>
+    <a href="/app" class="btn-primary" style="display:block; max-width:100%;">Start Free Today</a>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section>
+  <div class="section-label">People are talking</div>
+  <div class="section-title">Real people.<br>Real results.</div>
+  <div class="testimonial">
+    <div class="stars">★★★★★</div>
+    <p>"I tried everything. Other apps were too complicated or easy to bypass. ShieldMe was set up in 5 minutes and I haven't been able to get around it — which is exactly what I needed."</p>
+    <div class="testimonial-author">— David M., Uganda</div>
+  </div>
+  <div class="testimonial">
+    <div class="stars">★★★★★</div>
+    <p>"I set this up for my whole family on our home WiFi. My kids are protected on every device without me having to install anything on each one. It just works."</p>
+    <div class="testimonial-author">— Sarah K., Kenya</div>
+  </div>
+  <div class="testimonial">
+    <div class="stars">★★★★★</div>
+    <p>"The Guardian PIN is a genius idea. I gave it to my pastor and now I truly can't disable it myself. This app understands the problem deeply."</p>
+    <div class="testimonial-author">— James O., Nigeria</div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div style="font-size:60px; margin-bottom:20px;">🛡️</div>
+  <h2 style="font-family:'Syne',sans-serif; font-size:clamp(28px,6vw,44px); font-weight:800; margin-bottom:16px; text-align:center;">Ready to take back<br>control?</h2>
+  <p style="color:var(--muted); margin-bottom:32px; text-align:center; max-width:320px;">Start free. No credit card. Protected in under 5 minutes.</p>
+  <a href="/app" class="btn-primary">Get ShieldMe Free</a>
+</div>
+
+<footer>
+  <div style="font-family:'Syne',sans-serif; font-weight:800; font-size:18px; margin-bottom:8px;">Shield<span style="color:var(--accent);">Me</span></div>
+  <p>Protecting families and individuals across Africa and beyond.</p>
+  <p style="margin-top:8px;">© 2026 ShieldMe. All rights reserved.</p>
+</footer>
+
+</body>
+</html>
