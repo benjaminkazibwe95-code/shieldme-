@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShieldMe — App</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f; --card: #13131a; --border: #1e1e2e;
+    --accent: #4ade80; --danger: #f87171; --text: #f0f0f0; --muted: #6b7280;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; overflow-x:hidden; }
+  body::before {
+    content:''; position:fixed; top:-200px; left:50%; transform:translateX(-50%);
+    width:600px; height:600px;
+    background:radial-gradient(circle, rgba(74,222,128,0.07) 0%, transparent 70%);
+    pointer-events:none; z-index:0;
+  }
+
+  .screen { display:none; min-height:100vh; position:relative; z-index:1; }
+  .screen.active { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+
+  .logo {
+    font-family:'Syne',sans-serif; font-size:26px; font-weight:800;
+    position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:100;
+  }
+  .logo span { color:var(--accent); }
+
+  h1 { font-family:'Syne',sans-serif; font-size:clamp(28px,6vw,44px); font-weight:800; text-align:center; line-height:1.1; margin-bottom:12px; }
+  h1 span { color:var(--accent); }
+  .subtitle { color:var(--muted); font-size:16px; text-align:center; max-width:340px; line-height:1.6; margin-bottom:32px; }
+
+  .btn-primary {
+    background:var(--accent); color:#000; border:none;
+    padding:17px 40px; border-radius:100px;
+    font-family:'Syne',sans-serif; font-size:17px; font-weight:700;
+    cursor:pointer; transition:all 0.2s; width:100%; max-width:340px;
+  }
+  .btn-primary:hover { transform:scale(1.03); box-shadow:0 0 30px rgba(74,222,128,0.4); }
+  .btn-primary:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+  .btn-secondary { background:transparent; color:var(--muted); border:none; padding:14px; font-size:14px; cursor:pointer; text-decoration:underline; font-family:'DM Sans',sans-serif; }
+  .btn-secondary:hover { color:var(--text); }
+
+  .input-group { width:100%; max-width:380px; margin-bottom:14px; }
+  .input-group label { display:block; font-size:13px; color:var(--muted); margin-bottom:7px; font-weight:500; }
+  input[type="text"],input[type="password"],input[type="email"] {
+    width:100%; background:var(--card); border:1.5px solid var(--border);
+    border-radius:12px; padding:15px 16px; color:var(--text);
+    font-size:16px; font-family:'DM Sans',sans-serif; outline:none; transition:border-color 0.2s;
+  }
+  input:focus { border-color:var(--accent); }
+
+  .error-box { background:rgba(248,113,113,0.1); border:1px solid var(--danger); border-radius:10px; padding:12px 16px; font-size:13px; color:var(--danger); margin-bottom:14px; width:100%; max-width:380px; display:none; }
+  .success-box { background:rgba(74,222,128,0.1); border:1px solid var(--accent); border-radius:10px; padding:12px 16px; font-size:13px; color:var(--accent); margin-bottom:14px; width:100%; max-width:380px; display:none; }
+
+  .hero-icon { font-size:80px; margin-bottom:24px; animation:float 3s ease-in-out infinite; }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  .screen.active > * { animation:fadeUp 0.4s ease forwards; }
+
+  .block-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; max-width:400px; margin-bottom:16px; }
+  .block-btn {
+    background:var(--card); border:2px solid var(--border); border-radius:14px;
+    padding:18px 14px; cursor:pointer; transition:all 0.2s; text-align:center;
+  }
+  .block-btn .icon { font-size:28px; display:block; margin-bottom:8px; }
+  .block-btn .label { font-size:14px; font-weight:500; color:var(--text); }
+  .block-btn .sublabel { font-size:11px; color:var(--muted); margin-top:3px; }
+  .block-btn.selected { border-color:var(--accent); background:rgba(74,222,128,0.08); }
+  .block-btn.selected .label { color:var(--accent); }
+
+  .tags-container { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .tag { background:rgba(74,222,128,0.1); border:1px solid var(--accent); color:var(--accent); padding:5px 12px; border-radius:100px; font-size:13px; display:flex; align-items:center; gap:6px; }
+  .tag .remove { cursor:pointer; opacity:0.6; }
+
+  .status-dot { width:9px; height:9px; border-radius:50%; background:var(--accent); display:inline-block; margin-right:8px; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,0.4)} 50%{box-shadow:0 0 0 8px rgba(74,222,128,0)} }
+
+  .protected-badge { background:rgba(74,222,128,0.1); border:1px solid var(--accent); color:var(--accent); padding:7px 22px; border-radius:100px; font-size:13px; font-weight:500; letter-spacing:1px; margin-bottom:20px; display:flex; align-items:center; }
+
+  .dns-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; width:100%; max-width:400px; margin-bottom:12px; }
+  .card-title { font-family:'Syne',sans-serif; font-size:12px; font-weight:700; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:14px; }
+  .dns-step { display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .dns-step:last-child { border-bottom:none; padding-bottom:0; }
+  .step-num { background:var(--accent); color:#000; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; font-family:'Syne',sans-serif; flex-shrink:0; }
+  .step-text { font-size:13px; line-height:1.6; }
+  .step-text strong { color:var(--accent); font-family:monospace; }
+
+  .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--border); display:flex; justify-content:space-around; padding:10px 0 18px; z-index:100; }
+  .nav-item { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px 16px; border-radius:10px; border:none; background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif; transition:color 0.2s; }
+  .nav-item.active { color:var(--accent); }
+  .nav-item span:first-child { font-size:22px; }
+  .nav-item span:last-child { font-size:11px; font-weight:500; }
+
+  .spacer { height:80px; }
+  .top-spacer { height:65px; }
+
+  /* Spinner */
+  .spinner { width:20px; height:20px; border:2px solid rgba(0,0,0,0.2); border-top:2px solid #000; border-radius:50%; animation:spin 0.6s linear infinite; display:inline-block; margin-left:8px; vertical-align:middle; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  a.link { color:var(--accent); text-decoration:underline; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="logo">Shield<span>Me</span></div>
+
+<!-- SCREEN 1: WELCOME -->
+<div class="screen active" id="screen-welcome">
+  <div class="hero-icon">🛡️</div>
+  <h1>You deserve a<br><span>cleaner internet</span></h1>
+  <p class="subtitle">Block anything you don't want to see. One tap. Works on every browser and app.</p>
+  <button class="btn-primary" onclick="goTo('screen-signup')">Get Protected — It's Free</button>
+  <button class="btn-secondary" onclick="goTo('screen-login')">I already have an account</button>
+  <br>
+  <a href="/" style="font-size:13px; color:var(--muted);">← Back to home</a>
+</div>
+
+<!-- SCREEN 2: SIGN UP -->
+<div class="screen" id="screen-signup">
+  <div class="top-spacer"></div>
+  <h1 style="font-size:26px; margin-bottom:6px;">Create your account</h1>
+  <p class="subtitle" style="font-size:14px; margin-bottom:22px;">Free forever. No credit card needed.</p>
+
+  <div class="error-box" id="signup-error"></div>
+
+  <div class="input-group">
+    <label>Your name</label>
+    <input type="text" id="signup-name" placeholder="e.g. David" />
+  </div>
+  <div class="input-group">
+    <label>Email address</label>
+    <input type="email" id="signup-email" placeholder="you@email.com" />
+  </div>
+  <div class="input-group">
+    <label>Password (min 6 characters)</label>
+    <input type="password" id="signup-pass" placeholder="Make it strong" />
+  </div>
+  <div class="input-group" style="margin-bottom:22px;">
+    <label>🔒 Guardian PIN — <span style="color:var(--muted); font-size:11px;">Give this to someone you trust. They lock your settings so you can't bypass your own blocks.</span></label>
+    <input type="password" id="signup-pin" placeholder="4 digits e.g. 1234" maxlength="4" inputmode="numeric" />
+  </div>
+
+  <button class="btn-primary" id="signup-btn" onclick="doSignup()">Create My Shield</button>
+  <button class="btn-secondary" onclick="goTo('screen-welcome')">← Back</button>
+  <div class="spacer"></div>
+</div>
+
+<!-- SCREEN 3: LOGIN -->
+<div class="screen" id="screen-login">
+  <div class="top-spacer"></div>
+  <h1 style="font-size:26px; margin-bottom:6px;">Welcome back 👋</h1>
+  <p class="subtitle" style="font-size:14px; margin-bottom:22px;">Your shield is waiting.</p>
+
+  <div class="error-box" id="login-error"></div>
+
+  <div class="input-group">
+    <label>Email</label>
+    <input type="email" id="login-email" placeholder="you@email.com" />
+  </div>
+  <div class="input-group" style="margin-bottom:22px;">
+    <label>Password</label>
+    <input type="password" id="login-pass" placeholder="Your password" />
+  </div>
+
+  <button class="btn-primary" id="login-btn" onclick="doLogin()">Sign In</button>
+  <button class="btn-secondary" onclick="goTo('screen-welcome')">← Back</button>
+  <div class="spacer"></div>
+</div>
+
+<!-- SCREEN 4: CHOOSE BLOCKS -->
+<div class="screen" id="screen-choose">
+  <div class="top-spacer"></div>
+  <h1 style="font-size:24px; margin-bottom:6px;">What do you want<br>to <span>block?</span></h1>
+  <p class="subtitle" style="font-size:13px; margin-bottom:20px;">Tap everything that applies.</p>
+
+  <div class="block-grid">
+    <div class="block-btn" onclick="toggleBlock(this,'adult')">
+      <span class="icon">🔞</span>
+      <div class="label">Adult Content</div>
+      <div class="sublabel">Porn & explicit sites</div>
+    </div>
+    <div class="block-btn" onclick="toggleBlock(this,'gambling')">
+      <span class="icon">🎰</span>
+      <div class="label">Gambling</div>
+      <div class="sublabel">Betting & casinos</div>
+    </div>
+    <div class="block-btn" onclick="toggleBlock(this,'violence')">
+      <span class="icon">⚠️</span>
+      <div class="label">Violence</div>
+      <div class="sublabel">Graphic content</div>
+    </div>
+    <div class="block-btn" onclick="toggleBlock(this,'social')">
+      <span class="icon">📱</span>
+      <div class="label">Social Media</div>
+      <div class="sublabel">Focus mode</div>
+    </div>
+    <div class="block-btn" onclick="toggleBlock(this,'drugs')">
+      <span class="icon">💊</span>
+      <div class="label">Drugs</div>
+      <div class="sublabel">Substance sites</div>
+    </div>
+    <div class="block-btn" onclick="toggleBlock(this,'custom')">
+      <span class="icon">✏️</span>
+      <div class="label">Custom</div>
+      <div class="sublabel">Your own words</div>
+    </div>
+  </div>
+
+  <div class="input-group" id="custom-area" style="display:none; max-width:400px;">
+    <label>Type a word and press Enter</label>
+    <input type="text" id="custom-word" placeholder="e.g. casino, escort..." onkeydown="addWord(event)" />
+    <div class="tags-container" id="custom-tags"></div>
+  </div>
+
+  <div class="error-box" id="blocks-error" style="max-width:400px;"></div>
+
+  <button class="btn-primary" id="blocks-btn" style="margin-top:16px;" onclick="saveBlocks()">Activate My Shield 🛡️</button>
+  <div class="spacer"></div>
+</div>
+
+<!-- SCREEN 5: PROTECTED -->
+<div class="screen" id="screen-protected">
+  <div class="top-spacer"></div>
+
+  <div style="font-size:90px; animation:float 3s ease-in-out infinite; filter:drop-shadow(0 0 30px rgba(74,222,128,0.3));">🛡️</div>
+  <div class="protected-badge"><span class="status-dot"></span>PROTECTED</div>
+
+  <h1 style="font-size:24px; margin-bottom:8px;">You're shielded,<br><span id="user-name-display">friend</span>. 💪</h1>
+  <p class="subtitle" style="font-size:13px; margin-bottom:20px;">Your blocks are active. Now activate on ALL browsers:</p>
+
+  <div class="dns-card">
+    <div class="card-title">📡 Block on every browser & app</div>
+    <div class="dns-step">
+      <div class="step-num">1</div>
+      <div class="step-text">Open phone <strong>Settings → WiFi</strong> → tap your network name</div>
+    </div>
+    <div class="dns-step">
+      <div class="step-num">2</div>
+      <div class="step-text">Find <strong>DNS</strong> and change it to: <strong>1.1.1.3</strong></div>
+    </div>
+    <div class="dns-step">
+      <div class="step-num">3</div>
+      <div class="step-text">Save and done ✅ — Chrome, Firefox, DuckDuckGo, Phoenix — all blocked</div>
+    </div>
+  </div>
+
+  <p style="font-size:11px; color:var(--muted); text-align:center; max-width:300px; margin-bottom:16px;">
+    Powered by Cloudflare's free family-safe DNS. Blocks millions of adult sites automatically.
+  </p>
+
+  <button class="btn-secondary" onclick="confirmLogout()">Sign out</button>
+
+  <div class="spacer"></div>
+
+  <div class="bottom-nav">
+    <button class="nav-item active" id="nav-home" onclick="switchNav('home')"><span>🏠</span><span>Home</span></button>
+    <button class="nav-item" id="nav-blocks" onclick="switchNav('blocks')"><span>🚫</span><span>My Blocks</span></button>
+    <button class="nav-item" id="nav-settings" onclick="switchNav('settings')"><span>⚙️</span><span>Settings</span></button>
+  </div>
+</div>
+
+<script>
+  // ── State ──────────────────────────────────────────────────────
+  let currentUser = JSON.parse(localStorage.getItem('shieldme_user') || 'null');
+  let selectedBlocks = new Set();
+  let customWords = [];
+
+  // ── Navigation ─────────────────────────────────────────────────
+  function goTo(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+  function hideError(id) {
+    document.getElementById(id).style.display = 'none';
+  }
+
+  function setLoading(btnId, loading) {
+    const btn = document.getElementById(btnId);
+    btn.disabled = loading;
+    btn.innerHTML = loading ? 'Please wait...<span class="spinner"></span>' : btn.getAttribute('data-label') || btn.textContent;
+  }
+
+  // ── Sign Up ────────────────────────────────────────────────────
+  async function doSignup() {
+    hideError('signup-error');
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-pass').value;
+    const pin = document.getElementById('signup-pin').value;
+
+    if (!name || !email || !password) { showError('signup-error','Please fill in your name, email and password.'); return; }
+    if (password.length < 6) { showError('signup-error','Password must be at least 6 characters.'); return; }
+    if (pin && (pin.length !== 4 || isNaN(pin))) { showError('signup-error','Guardian PIN must be exactly 4 numbers.'); return; }
+
+    setLoading('signup-btn', true);
+    try {
+      const res = await fetch('/api/signup', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ name, email, password, guardian_pin: pin })
+      });
+      const data = await res.json();
+      if (!res.ok) { showError('signup-error', data.error || 'Something went wrong.'); return; }
+
+      currentUser = { id: data.user_id, name: data.name };
+      localStorage.setItem('shieldme_user', JSON.stringify(currentUser));
+      document.getElementById('user-name-display').textContent = data.name.split(' ')[0];
+      goTo('screen-choose');
+    } catch(e) {
+      showError('signup-error','Cannot connect. Check your internet and try again.');
+    } finally {
+      setLoading('signup-btn', false);
+      document.getElementById('signup-btn').textContent = 'Create My Shield';
+    }
+  }
+
+  // ── Login ──────────────────────────────────────────────────────
+  async function doLogin() {
+    hideError('login-error');
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-pass').value;
+    if (!email || !password) { showError('login-error','Please enter your email and password.'); return; }
+
+    setLoading('login-btn', true);
+    try {
+      const res = await fetch('/api/login', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) { showError('login-error', data.error || 'Wrong email or password.'); return; }
+
+      currentUser = { id: data.user_id, name: data.name, has_pin: data.has_pin };
+      localStorage.setItem('shieldme_user', JSON.stringify(currentUser));
+      document.getElementById('user-name-display').textContent = data.name.split(' ')[0];
+      goTo('screen-protected');
+    } catch(e) {
+      showError('login-error','Cannot connect. Check your internet.');
+    } finally {
+      setLoading('login-btn', false);
+      document.getElementById('login-btn').textContent = 'Sign In';
+    }
+  }
+
+  // ── Block selection ────────────────────────────────────────────
+  function toggleBlock(el, type) {
+    el.classList.toggle('selected');
+    selectedBlocks.has(type) ? selectedBlocks.delete(type) : selectedBlocks.add(type);
+    document.getElementById('custom-area').style.display = selectedBlocks.has('custom') ? 'block' : 'none';
+  }
+
+  function addWord(e) {
+    if (e.key === 'Enter') {
+      const input = document.getElementById('custom-word');
+      const w = input.value.trim().toLowerCase();
+      if (w && !customWords.includes(w)) { customWords.push(w); renderTags(); }
+      input.value = '';
+    }
+  }
+  function renderTags() {
+    document.getElementById('custom-tags').innerHTML = customWords.map((w,i) =>
+      `<div class="tag">${w} <span class="remove" onclick="removeTag(${i})">✕</span></div>`
+    ).join('');
+  }
+  function removeTag(i) { customWords.splice(i,1); renderTags(); }
+
+  // ── Save blocks ────────────────────────────────────────────────
+  async function saveBlocks() {
+    if (!currentUser) { goTo('screen-login'); return; }
+    hideError('blocks-error');
+
+    setLoading('blocks-btn', true);
+    try {
+      const res = await fetch('/api/blocks', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          user_id: currentUser.id,
+          blocks: Array.from(selectedBlocks),
+          custom_words: customWords
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) { showError('blocks-error', data.error || 'Could not save. Try again.'); return; }
+      goTo('screen-protected');
+    } catch(e) {
+      showError('blocks-error','Cannot connect. Check your internet.');
+    } finally {
+      setLoading('blocks-btn', false);
+      document.getElementById('blocks-btn').textContent = 'Activate My Shield 🛡️';
+    }
+  }
+
+  // ── Nav switching ──────────────────────────────────────────────
+  function switchNav(tab) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('nav-' + tab).classList.add('active');
+    if (tab === 'blocks') goTo('screen-choose');
+    else if (tab === 'settings') openSettings();
+    else goTo('screen-protected');
+  }
+
+  async function openSettings() {
+    if (currentUser && currentUser.has_pin) {
+      const pin = prompt('Enter your Guardian PIN to open settings:');
+      if (!pin) { switchNav('home'); return; }
+      try {
+        const res = await fetch('/api/verify-pin', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ user_id: currentUser.id, pin })
+        });
+        const data = await res.json();
+        if (!data.success) { alert('❌ Wrong PIN. Your Guardian controls these settings.'); switchNav('home'); return; }
+      } catch(e) { alert('Cannot verify PIN. Check internet.'); switchNav('home'); return; }
+    }
+    alert('✅ Settings unlocked.\n\nYou can now go to "My Blocks" to update what you block.\n\nTo change your Guardian PIN, contact support.');
+    switchNav('home');
+  }
+
+  function confirmLogout() {
+    if (confirm('Sign out? Your blocks will still be active on your network.')) {
+      localStorage.removeItem('shieldme_user');
+      currentUser = null;
+      goTo('screen-welcome');
+    }
+  }
+
+  // ── Auto login on load ─────────────────────────────────────────
+  window.addEventListener('load', () => {
+    if (currentUser) {
+      document.getElementById('user-name-display').textContent = currentUser.name.split(' ')[0];
+      goTo('screen-protected');
+    }
+  });
+</script>
+</body>
+</html>
