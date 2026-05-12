@@ -3,15 +3,15 @@ import hashlib
 import secrets
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
-import psycopg2
-from psycopg2.extras import RealDictCursor
+from psycopg import connect
+from psycopg.rows import dict_row
 
 app = Flask(__name__, static_folder='.')
 CORS(app)
 
 # ── Database connection ──────────────────────────────────────────
 def get_db():
-    conn = psycopg2.connect(os.environ['DATABASE_URL'], sslmode='require')
+    conn = connect(os.environ['DATABASE_URL'], sslmode='require')
     return conn
 
 def init_db():
@@ -73,7 +73,7 @@ def signup():
 
     try:
         conn = get_db()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur = conn.cursor(row_factory=dict_row)
         cur.execute(
             "INSERT INTO users (name, email, password_hash, guardian_pin) VALUES (%s, %s, %s, %s) RETURNING id, name",
             (name, email, hash_password(password), pin if pin else None)
@@ -97,7 +97,7 @@ def login():
 
     try:
         conn = get_db()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur = conn.cursor(row_factory=dict_row)
         cur.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cur.fetchone()
         cur.close()
@@ -154,7 +154,7 @@ def save_blocks():
 def get_blocks(user_id):
     try:
         conn = get_db()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur = conn.cursor(row_factory=dict_row)
         cur.execute("SELECT block_type, custom_word FROM user_blocks WHERE user_id = %s", (user_id,))
         rows = cur.fetchall()
         cur.close()
@@ -172,7 +172,7 @@ def verify_pin():
 
     try:
         conn = get_db()
-        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur = conn.cursor(row_factory=dict_row)
         cur.execute("SELECT guardian_pin FROM users WHERE id = %s", (user_id,))
         user = cur.fetchone()
         cur.close()
